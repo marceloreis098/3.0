@@ -38,8 +38,9 @@ const InventoryStatusPanel: React.FC<{ settings: Partial<AppSettings>; setActive
     }
 
     const lastUpdate = settings.lastAbsoluteUpdateTimestamp ? new Date(settings.lastAbsoluteUpdateTimestamp) : null;
+    const isValidDate = lastUpdate && !isNaN(lastUpdate.getTime());
     const now = new Date();
-    const hoursDiff = lastUpdate ? (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60) : Infinity;
+    const hoursDiff = isValidDate ? (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60) : Infinity;
     const isUpdatePending = hoursDiff > 48;
 
     return (
@@ -48,7 +49,7 @@ const InventoryStatusPanel: React.FC<{ settings: Partial<AppSettings>; setActive
                 <Icon name={isUpdatePending ? "History" : "CheckCircle"} size={24} />
                 <div>
                     <h4 className="font-bold">Status da Atualização do Inventário</h4>
-                    {lastUpdate ? (
+                    {isValidDate ? (
                         <p>Última atualização: {lastUpdate.toLocaleString('pt-BR')}</p>
                     ) : (
                         <p>Nenhuma atualização registrada.</p>

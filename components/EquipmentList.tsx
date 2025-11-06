@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Equipment, User, UserRole, EquipmentHistory, AppSettings } from '../types';
 import Icon from './common/Icon';
@@ -5,6 +6,29 @@ import { QRCodeCanvas as QRCode } from 'qrcode.react';
 import { getEquipment, getEquipmentHistory, addEquipment, updateEquipment, deleteEquipment, getSettings } from '../services/apiService';
 import TermoResponsabilidade from './TermoResponsabilidade';
 import PeriodicUpdate from './PeriodicUpdate'; // Importar o novo componente
+
+// FIX: Added the missing TermoStatusBadge component definition to resolve 'Cannot find name' errors.
+const TermoStatusBadge: React.FC<{ condicao?: Equipment['condicaoTermo'] }> = ({ condicao }) => {
+    if (!condicao || condicao === 'N/A') {
+        return <span className="text-xs font-medium text-gray-500">N/A</span>;
+    }
+
+    const statusMap = {
+        'Pendente': { text: 'Pendente', className: 'bg-yellow-200 text-yellow-800' },
+        'Assinado - Entrega': { text: 'Assinado - Entrega', className: 'bg-green-200 text-green-800' },
+        'Assinado - Devolução': { text: 'Assinado - Devolução', className: 'bg-blue-200 text-blue-800' },
+    };
+
+    const currentStatus = condicao in statusMap ? statusMap[condicao as keyof typeof statusMap] : null;
+
+    if (!currentStatus) return <span className="text-xs font-medium text-gray-500">{condicao}</span>;
+
+    return (
+        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${currentStatus.className}`}>
+            {currentStatus.text}
+        </span>
+    );
+};
 
 const StatusBadge: React.FC<{ status: Equipment['approval_status'], reason?: string }> = ({ status, reason }) => {
     if (!status || status === 'approved') return null;
@@ -17,27 +41,6 @@ const StatusBadge: React.FC<{ status: Equipment['approval_status'], reason?: str
 
     const currentStatus = statusMap[status];
     if (!currentStatus) return null;
-
-    return (
-        <span className={`${baseClasses} ${currentStatus.className}`} title={reason || undefined}>
-            {currentStatus.text}
-        </span>
-    );
-};
-
-const TermoStatusBadge: React.FC<{ condicao?: string }> = ({ condicao }) => {
-    if (!condicao || condicao === 'N/A') {
-        return <span className="text-xs text-gray-500 dark:text-dark-text-secondary">N/A</span>;
-    }
-
-    const statusMap = {
-        'Pendente': { text: 'Pendente', className: 'bg-yellow-200 text-yellow-800' },
-        'Assinado - Entrega': { text: 'Entregue', className: 'bg-green-200 text-green-800' },
-        'Assinado - Devolução': { text: 'Devolvido', className: 'bg-blue-200 text-blue-800' },
-    };
-
-    const currentStatus = statusMap[condicao as keyof typeof statusMap];
-    if (!currentStatus) return <span className="text-xs text-gray-500">{condicao}</span>;
 
     return (
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${currentStatus.className}`}>
@@ -278,14 +281,19 @@ const EquipmentFormModal: React.FC<{
 };
 
 const LinkableField: React.FC<{ label: string; value?: string }> = ({ label, value }) => {
-    const isUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
+    if (!value || value.trim() === '') {
+        return <div><strong>{label}:</strong> N/A</div>;
+    }
+
+    const isUrl = value.startsWith('http://') || value.startsWith('https://') || value.startsWith('www.');
+    const url = isUrl && !value.startsWith('http') ? `//${value}` : value;
 
     return (
         <div>
             <strong>{label}:</strong>{' '}
             {isUrl ? (
                 <a
-                    href={value}
+                    href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-brand-primary hover:underline break-all"
@@ -294,7 +302,7 @@ const LinkableField: React.FC<{ label: string; value?: string }> = ({ label, val
                     {value}
                 </a>
             ) : (
-                value || 'N/A'
+                value
             )}
         </div>
     );

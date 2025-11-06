@@ -21,7 +21,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, isSsoEnabled }) => {
     try {
       const user = await login({ username, password });
       onLoginSuccess(user);
-    // FIX: Added closing curly brace to fix syntax error in try block.
     } catch (err: any) {
       if (err instanceof TypeError && err.message === 'Failed to fetch') {
         setError('Não foi possível conectar ao servidor. Verifique se a API está em execução.');
