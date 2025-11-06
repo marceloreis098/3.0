@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getLicenses, addLicense, updateLicense, deleteLicense, renameProduct, getLicenseTotals, saveLicenseTotals } from '../services/apiService';
 import { License, User, UserRole } from '../types';
@@ -556,6 +558,7 @@ const LicenseControl: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         
         // FIX: The helper functions expect a Date object. Pass the parsed `date` object to ensure correct date comparisons instead of the raw string.
         const expiring = isExpiringSoon(date);
+        // FIX: The helper functions expect a Date object. Pass the parsed `date` object to ensure correct date comparisons instead of the raw string.
         const expired = isExpired(date);
         const color = expired ? 'text-red-500 dark:text-red-400' : expiring ? 'text-yellow-500 dark:text-yellow-400' : '';
         const icon = expired ? 'TriangleAlert' : expiring ? 'Timer' : null;
