@@ -277,6 +277,29 @@ const EquipmentFormModal: React.FC<{
     );
 };
 
+const LinkableField: React.FC<{ label: string; value?: string }> = ({ label, value }) => {
+    const isUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
+
+    return (
+        <div>
+            <strong>{label}:</strong>{' '}
+            {isUrl ? (
+                <a
+                    href={value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-primary hover:underline break-all"
+                    title={`Abrir link para ${label}`}
+                >
+                    {value}
+                </a>
+            ) : (
+                value || 'N/A'
+            )}
+        </div>
+    );
+};
+
 const EquipmentDetailModal: React.FC<{
     equipment: Equipment;
     onClose: () => void;
@@ -378,9 +401,9 @@ const EquipmentDetailModal: React.FC<{
                         <div className="md:col-span-2 border-t dark:border-dark-border pt-4 mt-4">
                             <h5 className="font-semibold text-brand-dark dark:text-dark-text-primary mb-2">Documentos e Notas:</h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6">
-                                <div><strong>Nota Compra:</strong> {equipment.notaCompra || 'N/A'}</div>
-                                <div><strong>Nota PL K&M:</strong> {equipment.notaPlKm || 'N/A'}</div>
-                                <div><strong>Termo de Responsabilidade:</strong> {equipment.termoResponsabilidade || 'N/A'}</div>
+                                <LinkableField label="Nota Compra" value={equipment.notaCompra} />
+                                <LinkableField label="Nota PL K&M" value={equipment.notaPlKm} />
+                                <LinkableField label="Termo de Responsabilidade" value={equipment.termoResponsabilidade} />
                             </div>
                         </div>
 
