@@ -183,7 +183,7 @@ Antes de configurar o banco de dados ou o servidor, você precisa obter os arqui
 
 Abra o navegador no endereço do seu servidor Ubuntu, na porta do frontend: `http://<ip-do-servidor>:3000`.
 
-A aplicação deve carregar a tela de login. Use as credenciais `admin` / `marceloadmin` para acessar o sistema.
+A aplicação deve carregar a tela de login. Use as credenciais de administrador padrão para o primeiro acesso.
 
 ---
 
