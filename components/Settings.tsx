@@ -161,3 +161,306 @@ const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
                     ...data,
                     isSsoEnabled: data.isSsoEnabled || false,
                     is2faEnabled: data.is2faEnabled || false,
+                    require2fa: data.require2fa || false,
+                    hasInitialConsolidationRun: data.hasInitialConsolidationRun || false,
+                });
+                
+                setTermoEntregaTemplate(data.termo_entrega_template || DEFAULT_ENTREGA_TEMPLATE);
+                setTermoDevolucaoTemplate(data.termo_devolucao_template || DEFAULT_DEVOLUCAO_TEMPLATE);
+                setBackupStatus(dbBackupStatus);
+
+                const currentProductNames = new Set<string>();
+                licenses.forEach(l => currentProductNames.add(l.produto));
+                Object.keys(totals).forEach(p => currentProductNames.add(p));
+                setProductNames([...currentProductNames].sort());
+
+            } catch (error) {
+                console.error("Failed to fetch settings data:", error);
+            }
+        }
+        
+        await checkGeminiApiKeyStatus();
+        setIsLoading(false);
+    }, [currentUser]);
+
+    useEffect(() => {
+        fetchAllData();
+    }, [fetchAllData]);
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        
+        if (type === 'checkbox') {
+            const { checked } = e.target as HTMLInputElement;
+            setSettings(prev => ({ ...prev, [name]: checked }));
+        } else {
+            setSettings(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleSave = async (section: string, dataToSave: any) => {
+        setIsSaving(true);
+        try {
+            const result = await saveSettings(dataToSave, currentUser.username);
+            if (result.success) {
+                alert(`Configurações de ${section} salvas com sucesso!`);
+            } else {
+                alert(`Erro ao salvar configurações: ${result.message}`);
+            }
+        } catch (error: any) {
+            alert(`Erro: ${error.message}`);
+        } finally {
+            setIsSaving(false);
+            fetchAllData(); // Re-fetch all data to ensure consistency
+        }
+    };
+    
+     const handleDatabaseAction = async (action: 'backup' | 'restore' | 'clear') => {
+        const actionMap = {
+            backup: { confirm: "Tem certeza que deseja criar um novo backup do banco de dados? Isso sobrescreverá o backup anterior.", func: backupDatabase },
+            restore: { confirm: "ATENÇÃO: Isso substituirá TODOS os dados atuais pelos dados do último backup. Esta ação é irreversível. Deseja continuar?", func: restoreDatabase },
+            clear: { confirm: "PERIGO: Esta ação irá APAGAR TODOS os dados do inventário, licenças, usuários (exceto 'admin') e configurações. Esta ação é IRREVERSÍVEL. Tem certeza absoluta?", func: clearDatabase }
+        };
+
+        if (!window.confirm(actionMap[action].confirm)) return;
+
+        setIsDatabaseActionLoading(true);
+        try {
+            const result = await actionMap[action].func(currentUser.username);
+            if (result.success) {
+                alert(result.message);
+                if (action === 'restore' || action === 'clear') {
+                     window.location.reload();
+                } else {
+                    fetchAllData();
+                }
+            } else {
+                alert(`Erro: ${result.message}`);
+            }
+        } catch (error: any) {
+             alert(`Erro: ${error.message}`);
+        } finally {
+            setIsDatabaseActionLoading(false);
+        }
+    };
+
+    const handleSelectGeminiKey = async () => {
+        if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+            await window.aistudio.openSelectKey();
+            // Assume success to avoid race condition and re-check
+            setHasGeminiApiKey(true);
+        } else {
+            alert("A funcionalidade de seleção de chave não está disponível neste ambiente.");
+        }
+    };
+
+    const renderGeneralSettings = () => (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Configurações Gerais</h3>
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Nome da Empresa</label>
+                    <input type="text" name="companyName" value={settings.companyName || ''} onChange={handleChange} className="mt-1 w-full p-2 border dark:border-dark-border rounded-md bg-white dark:bg-gray-800" />
+                </div>
+                 <button onClick={() => handleSave('Gerais', { companyName: settings.companyName })} disabled={isSaving} className="bg-brand-primary text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400">
+                    {isSaving ? 'Salvando...' : 'Salvar Configurações Gerais'}
+                 </button>
+            </div>
+        </div>
+    );
+    
+    const renderSecuritySettings = () => (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Segurança</h3>
+            <div className="divide-y dark:divide-dark-border">
+                <SettingsToggle
+                    label="Habilitar Single Sign-On (SSO) via SAML"
+                    name="isSsoEnabled"
+                    checked={settings.isSsoEnabled || false}
+                    onChange={handleChange}
+                    description="Permite que os usuários façam login usando um provedor de identidade externo."
+                />
+                <div className={`${!(settings.isSsoEnabled) ? 'opacity-50' : ''}`}>
+                    <div className="py-3 space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">URL de Login do Provedor de Identidade (IdP)</label>
+                        <input type="text" name="ssoUrl" value={settings.ssoUrl || ''} onChange={handleChange} disabled={!settings.isSsoEnabled} className="w-full p-2 border dark:border-dark-border rounded-md bg-white dark:bg-gray-800 disabled:bg-gray-200 dark:disabled:bg-gray-700" />
+                    </div>
+                    {/* Other SSO fields would go here */}
+                </div>
+                
+                 <SettingsToggle
+                    label="Habilitar Autenticação de Dois Fatores (2FA) Globalmente"
+                    name="is2faEnabled"
+                    checked={settings.is2faEnabled || false}
+                    onChange={handleChange}
+                    description="Permite que os usuários ativem o 2FA em seus perfis."
+                />
+                 <SettingsToggle
+                    label="Exigir 2FA para todos os usuários (exceto SSO)"
+                    name="require2fa"
+                    checked={settings.require2fa || false}
+                    onChange={handleChange}
+                    description="Força os usuários a configurarem o 2FA no próximo login."
+                    disabled={!settings.is2faEnabled}
+                />
+            </div>
+             <button onClick={() => handleSave('Segurança', { isSsoEnabled: settings.isSsoEnabled, ssoUrl: settings.ssoUrl, is2faEnabled: settings.is2faEnabled, require2fa: settings.require2fa })} disabled={isSaving} className="mt-6 bg-brand-primary text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400">
+                {isSaving ? 'Salvando...' : 'Salvar Configurações de Segurança'}
+             </button>
+        </div>
+    );
+
+    const renderDatabaseSettings = () => (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Gerenciamento do Banco de Dados</h3>
+            <div className="space-y-6">
+                <div className="p-4 border dark:border-dark-border rounded-lg">
+                    <h4 className="font-semibold">Backup e Restauração</h4>
+                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary mb-4">
+                        {backupStatus?.hasBackup 
+                            ? `Último backup realizado em: ${new Date(backupStatus.backupTimestamp!).toLocaleString()}`
+                            : 'Nenhum backup encontrado.'}
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                         <button onClick={() => handleDatabaseAction('backup')} disabled={isDatabaseActionLoading} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:bg-gray-400">
+                             <Icon name="DatabaseBackup" size={16}/> {isDatabaseActionLoading ? '...' : 'Criar Backup Agora'}
+                         </button>
+                         <button onClick={() => handleDatabaseAction('restore')} disabled={isDatabaseActionLoading || !backupStatus?.hasBackup} className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 flex items-center gap-2 disabled:bg-gray-400">
+                            <Icon name="History" size={16}/> {isDatabaseActionLoading ? '...' : 'Restaurar Último Backup'}
+                         </button>
+                    </div>
+                </div>
+                <div className="p-4 border border-red-500 rounded-lg">
+                    <h4 className="font-semibold text-red-600 dark:text-red-400">Zona de Perigo</h4>
+                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary mb-4">
+                       Ação irreversível que apaga todos os dados do sistema.
+                    </p>
+                    <button onClick={() => handleDatabaseAction('clear')} disabled={isDatabaseActionLoading} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2 disabled:bg-gray-400">
+                        <Icon name="Trash2" size={16}/> {isDatabaseActionLoading ? '...' : 'Zerar Banco de Dados'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderIntegrationSettings = () => (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Integrações</h3>
+            <div className="p-4 border dark:border-dark-border rounded-lg">
+                <h4 className="font-semibold flex items-center gap-2">Google Gemini API
+                   {isCheckingGeminiKey ? <Icon name="LoaderCircle" className="animate-spin" /> : 
+                     hasGeminiApiKey === true ? <Icon name="CircleCheck" className="text-green-500"/> :
+                     hasGeminiApiKey === false ? <Icon name="TriangleAlert" className="text-red-500"/> : null}
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary mb-4">
+                    Necessário para as funcionalidades de IA, como o assistente de relatórios.
+                </p>
+                <div className="flex items-center gap-3">
+                    <button onClick={handleSelectGeminiKey} className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                        {hasGeminiApiKey ? 'Trocar Chave de API' : 'Selecionar Chave de API'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+     const renderImportSettings = () => (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Importação e Atualização de Dados</h3>
+            
+            <div className="mb-8">
+                {settings.hasInitialConsolidationRun ? (
+                    <div className="p-4 bg-green-100 dark:bg-green-900/30 border-l-4 border-green-500 text-green-800 dark:text-green-200 rounded-lg flex items-center gap-3">
+                        <Icon name="CircleCheck" size={24} />
+                        <div>
+                            <h4 className="font-bold">Consolidação Inicial Concluída</h4>
+                            <p>O inventário de equipamentos foi inicializado. Você agora pode realizar atualizações periódicas.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 rounded-lg flex items-center gap-3">
+                        <Icon name="TriangleAlert" size={24} />
+                        <div>
+                             <h4 className="font-bold">Ação Necessária: Consolidação Inicial</h4>
+                            <p>A ferramenta de consolidação deve ser executada uma vez para criar a base inicial do inventário de equipamentos.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <DataConsolidation currentUser={currentUser} />
+            <LicenseImport currentUser={currentUser} productNames={productNames} onImportSuccess={fetchAllData} />
+            {settings.hasInitialConsolidationRun && <PeriodicUpdate currentUser={currentUser} onUpdateSuccess={fetchAllData} />}
+        </div>
+    );
+
+     const renderTermoSettings = () => (
+        <div>
+             <h3 className="text-xl font-bold mb-4">Modelos de Termos</h3>
+             <p className="text-sm text-gray-500 dark:text-dark-text-secondary mb-4">
+                Edite os templates HTML para os termos de entrega e devolução. Use os placeholders como `{{USUARIO}}` para inserir dados dinâmicos.
+             </p>
+            <div className="space-y-6">
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Template do Termo de Entrega</label>
+                    <textarea value={termoEntregaTemplate} onChange={(e) => setTermoEntregaTemplate(e.target.value)} rows={10} className="font-mono mt-1 w-full p-2 border dark:border-dark-border rounded-md bg-white dark:bg-gray-800" />
+                </div>
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Template do Termo de Devolução</label>
+                    <textarea value={termoDevolucaoTemplate} onChange={(e) => setTermoDevolucaoTemplate(e.target.value)} rows={10} className="font-mono mt-1 w-full p-2 border dark:border-dark-border rounded-md bg-white dark:bg-gray-800" />
+                </div>
+            </div>
+            <button onClick={() => handleSave('Termos', { termo_entrega_template: termoEntregaTemplate, termo_devolucao_template: termoDevolucaoTemplate })} disabled={isSaving} className="mt-6 bg-brand-primary text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400">
+                {isSaving ? 'Salvando...' : 'Salvar Templates'}
+            </button>
+        </div>
+    );
+
+    const tabs = [
+        { id: 'general', label: 'Geral', icon: 'Settings' },
+        { id: 'security', label: 'Segurança', icon: 'Shield' },
+        { id: 'database', label: 'Banco de Dados', icon: 'Database' },
+        { id: 'integration', label: 'Integrações', icon: 'Waypoints' },
+        { id: 'import', label: 'Importação', icon: 'CloudUpload' },
+        { id: 'termo', label: 'Termos', icon: 'FileText' },
+    ];
+    
+    if (isLoading) return <div className="flex justify-center items-center h-full"><Icon name="LoaderCircle" className="animate-spin text-brand-primary" size={48} /></div>;
+
+    return (
+        <div className="bg-white dark:bg-dark-card p-4 sm:p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-brand-dark dark:text-dark-text-primary mb-6">Configurações do Sistema</h2>
+            <div className="flex flex-col lg:flex-row gap-8">
+                <nav className="flex-shrink-0 lg:w-1/4">
+                    <ul className="space-y-2">
+                        {tabs.map(tab => (
+                            <li key={tab.id}>
+                                <button
+                                    onClick={() => setActiveSettingsTab(tab.id as any)}
+                                    className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left transition-colors ${
+                                        activeSettingsTab === tab.id
+                                            ? 'bg-brand-primary text-white'
+                                            : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <Icon name={tab.icon as any} size={20} />
+                                    <span>{tab.label}</span>
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+                <div className="flex-grow">
+                    {activeSettingsTab === 'general' && renderGeneralSettings()}
+                    {activeSettingsTab === 'security' && renderSecuritySettings()}
+                    {activeSettingsTab === 'database' && renderDatabaseSettings()}
+                    {activeSettingsTab === 'integration' && renderIntegrationSettings()}
+                    {activeSettingsTab === 'import' && renderImportSettings()}
+                    {activeSettingsTab === 'termo' && renderTermoSettings()}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Settings;

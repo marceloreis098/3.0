@@ -1,23 +1,19 @@
-
-import { GoogleGenAI } from '@google/ai/generativelanguage';
+import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { Equipment } from '../types';
 
 const getGeminiClient = () => {
-    // FIX: API key must be obtained from process.env.API_KEY per coding guidelines.
+    // API key must be obtained from process.env.API_KEY per coding guidelines.
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-        // FIX: Updated error message to reflect the new source of the API key.
         throw new Error("A chave de API do Gemini não está configurada no ambiente (process.env.API_KEY).");
     }
-    // FIX: Pass apiKey as a named parameter as required by the new API.
-    return new GoogleGenAI(apiKey);
+    // Pass apiKey as a named parameter as required by the API.
+    return new GoogleGenAI({apiKey});
 }
 
 export const generateReportWithGemini = async (query: string, data: Equipment[]): Promise<{ reportData?: Equipment[], error?: string }> => {
     try {
         const ai = getGeminiClient();
-        // FIX: Per guidelines, do not define model first. Use generateContent directly.
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash-latest"});
         
         const prompt = `
             Você é um assistente de IA especialista em análise de dados de inventário.
@@ -35,13 +31,21 @@ export const generateReportWithGemini = async (query: string, data: Equipment[])
             ${JSON.stringify(data, null, 2)}
         `;
         
-        // FIX: Updated to use the correct method for generating content and getting the response.
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
+        // Updated to use the correct method for generating content.
+        const response: GenerateContentResponse = await ai.models.generateContent({
+            // FIX: Updated deprecated model to 'gemini-2.5-flash' for basic text tasks.
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
         
-        // FIX: Per guidelines, access text directly from response.
-        const jsonText = response.text();
-        // FIX: It's good practice to handle cases where the text might not be perfectly trimmed or might be inside a code block.
+        // Per guidelines, access text directly from response.
+        const jsonText = response.text;
+        
+        if (!jsonText) {
+             throw new Error("A IA retornou uma resposta vazia.");
+        }
+        
+        // Handle cases where the text might not be perfectly trimmed or might be inside a code block.
         const cleanedJsonText = jsonText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
         const reportData = JSON.parse(cleanedJsonText);
 
@@ -56,7 +60,6 @@ export const generateReportWithGemini = async (query: string, data: Equipment[])
         console.error("Error calling Gemini API:", error);
         let errorMessage = "Ocorreu um erro ao gerar o relatório com a IA.";
         
-        // FIX: Updated error handling to be more generic and align with new API key logic.
         if (error.message) {
              if (error.message.includes("API key not valid")) {
                 errorMessage = "A chave de API do Gemini não é válida. Verifique a configuração do ambiente."
