@@ -348,8 +348,12 @@ app.post('/api/login', async (req, res) => {
 
                 await db.promise().query("UPDATE users SET lastLogin = NOW() WHERE id = ?", [user.id]);
                 logAction(username, 'LOGIN', 'USER', user.id, 'User logged in successfully');
-
-                const userResponse = { ...user };
+                
+                // Re-fetch the user to get the updated lastLogin timestamp
+                const [updatedUserRows] = await db.promise().query("SELECT * FROM users WHERE id = ?", [user.id]);
+                const updatedUser = updatedUserRows[0];
+                
+                const userResponse = { ...updatedUser };
                 delete userResponse.password;
                 delete userResponse.twoFASecret;
 
@@ -423,21 +427,35 @@ app.post('/api/sso/callback', (req, res) => {
 });
 
 // POST /api/verify-2fa
-app.post('/api/verify-2fa', (req, res) => {
+app.post('/api/verify-2fa', async (req, res) => {
     const { userId, token } = req.body;
-    db.query('SELECT * FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err || results.length === 0) return res.status(500).json({ message: 'User not found' });
+    try {
+        const [results] = await db.promise().query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const user = results[0];
         const isValid = authenticator.check(token, user.twoFASecret);
+
         if (isValid) {
-            const userResponse = { ...user };
+            await db.promise().query("UPDATE users SET lastLogin = NOW() WHERE id = ?", [user.id]);
+            logAction(user.username, 'LOGIN', 'USER', user.id, 'User logged in successfully via 2FA');
+
+            const [updatedUserRows] = await db.promise().query('SELECT * FROM users WHERE id = ?', [user.id]);
+            const updatedUser = updatedUserRows[0];
+
+            const userResponse = { ...updatedUser };
             delete userResponse.password;
             delete userResponse.twoFASecret;
             res.json(userResponse);
         } else {
             res.status(401).json({ message: 'Código de verificação inválido' });
         }
-    });
+    } catch (err) {
+        console.error("2FA verify error:", err);
+        res.status(500).json({ message: "Database error during 2FA verification" });
+    }
 });
 
 

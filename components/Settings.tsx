@@ -73,37 +73,6 @@ const DEFAULT_DEVOLUCAO_TEMPLATE = `
 `;
 
 
-const SettingsToggle: React.FC<{
-    label: string;
-    checked: boolean;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    name: string;
-    description?: string;
-    disabled?: boolean;
-}> = ({ label, checked, onChange, name, description, disabled = false }) => (
-    <div className="flex items-center justify-between py-3">
-        <div>
-            <label htmlFor={name} className={`font-medium text-gray-800 dark:text-dark-text-primary ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {label}
-            </label>
-            {description && <p className={`text-sm text-gray-500 dark:text-dark-text-secondary mt-1 ${disabled ? 'opacity-50' : ''}`}>{description}</p>}
-        </div>
-        <label htmlFor={name} className={`relative inline-flex items-center cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-            <input 
-                type="checkbox" 
-                id={name}
-                name={name}
-                checked={checked} 
-                onChange={onChange}
-                className="sr-only peer"
-                disabled={disabled}
-            />
-            <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-primary"></div>
-        </label>
-    </div>
-);
-
-
 const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
     const [settings, setSettings] = useState<Partial<AppSettings>>({
         isSsoEnabled: false,
@@ -238,7 +207,7 @@ const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
                 alert(`Erro: ${result.message}`);
             }
         } catch (error: any) {
-             // FIX: Corrected a typo in the catch block that was causing a compile error. Replaced erroneous object shorthand with proper error message handling.
+             // FIX: The alert function expects a string, but it was being passed an object. This has been corrected to display the error message properly.
              alert(`Erro: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setIsDatabaseActionLoading(false);
