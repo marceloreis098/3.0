@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { getEquipment, getLicenses, getSettings } from '../services/apiService';

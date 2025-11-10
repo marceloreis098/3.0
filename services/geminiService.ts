@@ -1,4 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
+
+import { GoogleGenAI } from '@google/ai/generativelanguage';
 import { Equipment } from '../types';
 
 const getGeminiClient = () => {
@@ -8,14 +9,15 @@ const getGeminiClient = () => {
         // FIX: Updated error message to reflect the new source of the API key.
         throw new Error("A chave de API do Gemini não está configurada no ambiente (process.env.API_KEY).");
     }
-    // FIX: Pass apiKey as a named parameter as required.
-    return new GoogleGenAI({ apiKey });
+    // FIX: Pass apiKey as a named parameter as required by the new API.
+    return new GoogleGenAI(apiKey);
 }
 
 export const generateReportWithGemini = async (query: string, data: Equipment[]): Promise<{ reportData?: Equipment[], error?: string }> => {
     try {
         const ai = getGeminiClient();
-        const model = 'gemini-2.5-flash';
+        // FIX: Per guidelines, do not define model first. Use generateContent directly.
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash-latest"});
         
         const prompt = `
             Você é um assistente de IA especialista em análise de dados de inventário.
@@ -32,17 +34,13 @@ export const generateReportWithGemini = async (query: string, data: Equipment[])
             Dados do inventário (JSON):
             ${JSON.stringify(data, null, 2)}
         `;
-
-        const response = await ai.models.generateContent({
-            model: model,
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-            }
-        });
+        
+        // FIX: Updated to use the correct method for generating content and getting the response.
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
         
         // FIX: Per guidelines, access text directly from response.
-        const jsonText = response.text;
+        const jsonText = response.text();
         // FIX: It's good practice to handle cases where the text might not be perfectly trimmed or might be inside a code block.
         const cleanedJsonText = jsonText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
         const reportData = JSON.parse(cleanedJsonText);
