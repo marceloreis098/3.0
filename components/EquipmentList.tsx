@@ -895,8 +895,8 @@ const EquipmentList: React.FC<EquipmentListProps> = ({ currentUser, companyName 
                         </button>
                     )}
                     <button onClick={() => handleOpenFormModal()} className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                        {/* FIX: Replaced invalid icon name 'CirclePlus' with 'PlusCircle' */}
-                        <Icon name="PlusCircle" size={18}/> Novo Equipamento
+                        {/* FIX: Replaced invalid icon name 'PlusCircle' with 'Plus' to resolve type error. */}
+                        <Icon name="Plus" size={18}/> Novo Equipamento
                     </button>
                 </div>
             </div>

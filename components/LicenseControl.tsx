@@ -1,15 +1,5 @@
 
 
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getLicenses, addLicense, updateLicense, deleteLicense, renameProduct, getLicenseTotals, saveLicenseTotals } from '../services/apiService';
 import { License, User, UserRole } from '../types';
@@ -608,8 +598,8 @@ const LicenseControl: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         </button>
                     )}
                     <button onClick={() => handleOpenModal()} className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                        {/* FIX: Replaced invalid icon name 'CirclePlus' with 'PlusCircle' */}
-                        <Icon name="PlusCircle" size={18}/> Nova Licença
+                        {/* FIX: Replaced invalid icon name 'PlusCircle' with 'Plus' to resolve type error. */}
+                        <Icon name="Plus" size={18}/> Nova Licença
                     </button>
                 </div>
             </div>
