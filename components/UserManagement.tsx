@@ -258,7 +258,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
                                     <RoleBadge role={user.role} />
                             </div>
                             <p className="text-sm text-gray-600 dark:text-dark-text-secondary break-all"><strong>Email:</strong> {user.email}</p>
-                            <p className="text-sm text-gray-600 dark:text-dark-text-secondary"><strong>Último Login:</strong> {user.lastLogin}</p>
+                            <p className="text-sm text-gray-600 dark:text-dark-text-secondary"><strong>Último Login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleString('pt-BR') : 'Nunca'}</p>
                             <p className="text-sm text-gray-600 dark:text-dark-text-secondary"><strong>Status 2FA:</strong> <TwoFactorStatus user={user}/></p>
 
                             <div className="flex justify-end pt-2">
@@ -290,7 +290,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
                                         <td className="px-4 py-3">{user.email}</td>
                                         <td className="px-4 py-3"><RoleBadge role={user.role} /></td>
                                         <td className="px-4 py-3"><TwoFactorStatus user={user} /></td>
-                                        <td className="px-4 py-3">{user.lastLogin}</td>
+                                        <td className="px-4 py-3">{user.lastLogin ? new Date(user.lastLogin).toLocaleString('pt-BR') : 'Nunca'}</td>
                                         <td className="px-4 py-3"><ActionButtons user={user} /></td>
                                     </tr>
                                 ))}
