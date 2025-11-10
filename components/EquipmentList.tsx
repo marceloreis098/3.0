@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Equipment, User, UserRole, EquipmentHistory, AppSettings } from '../types';
 import Icon from './common/Icon';
@@ -7,7 +8,6 @@ import { getEquipment, getEquipmentHistory, addEquipment, updateEquipment, delet
 import TermoResponsabilidade from './TermoResponsabilidade';
 import PeriodicUpdate from './PeriodicUpdate'; // Importar o novo componente
 
-// FIX: Added the missing TermoStatusBadge component definition to resolve 'Cannot find name' errors.
 const TermoStatusBadge: React.FC<{ condicao?: Equipment['condicaoTermo'] }> = ({ condicao }) => {
     if (!condicao || condicao === 'N/A') {
         return <span className="text-xs font-medium text-gray-500">N/A</span>;
@@ -895,7 +895,8 @@ const EquipmentList: React.FC<EquipmentListProps> = ({ currentUser, companyName 
                         </button>
                     )}
                     <button onClick={() => handleOpenFormModal()} className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                        <Icon name="CirclePlus" size={18}/> Novo Equipamento
+                        {/* FIX: Replaced invalid icon name 'CirclePlus' with 'PlusCircle' */}
+                        <Icon name="PlusCircle" size={18}/> Novo Equipamento
                     </button>
                 </div>
             </div>
