@@ -72,6 +72,39 @@ const DEFAULT_DEVOLUCAO_TEMPLATE = `
 </div>
 `;
 
+const SettingsToggle: React.FC<{
+    label: string;
+    name: string;
+    checked: boolean;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    description: string;
+    disabled?: boolean;
+}> = ({ label, name, checked, onChange, description, disabled = false }) => (
+    <div className={`py-4 ${disabled ? 'opacity-50' : ''}`}>
+        <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+                <span className="font-semibold text-gray-800 dark:text-dark-text-primary">{label}</span>
+                <span className="text-sm text-gray-500 dark:text-dark-text-secondary">{description}</span>
+            </div>
+            <label htmlFor={name} className="flex items-center cursor-pointer">
+                <div className="relative">
+                    <input 
+                        id={name} 
+                        name={name} 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={checked} 
+                        onChange={onChange} 
+                        disabled={disabled}
+                    />
+                    <div className={`block w-14 h-8 rounded-full ${checked ? 'bg-brand-primary' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                    <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${checked ? 'transform translate-x-6' : ''}`}></div>
+                </div>
+            </label>
+        </div>
+    </div>
+);
+
 
 const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
     const [settings, setSettings] = useState<Partial<AppSettings>>({
@@ -207,7 +240,7 @@ const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
                 alert(`Erro: ${result.message}`);
             }
         } catch (error: any) {
-             // FIX: The alert function expects a string, but it was being passed an object. This has been corrected to display the error message properly.
+             // FIX: The alert function expects a string. Safely convert the error to a string before displaying it.
              alert(`Erro: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setIsDatabaseActionLoading(false);
