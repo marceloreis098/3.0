@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { User, License } from '../types';
 import Icon from './common/Icon';

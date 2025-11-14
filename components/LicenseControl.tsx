@@ -1,21 +1,10 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getLicenses, addLicense, updateLicense, deleteLicense, renameProduct, getLicenseTotals, saveLicenseTotals } from '../services/apiService';
 import { License, User, UserRole } from '../types';
 import Icon from './common/Icon';
+import { icons } from 'lucide-react';
 
 const ProductManagementModal: React.FC<{
     initialProductNames: string[];
@@ -564,16 +553,15 @@ const LicenseControl: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         const date = parseDateString(dateStr);
         if (!date) return <span className="font-semibold flex items-center gap-1.5 text-red-500"><Icon name="TriangleAlert" size={16} /> Data Inválida</span>;
         
-        // FIX: Pass the parsed Date object to the helper functions instead of the raw string.
         const expiring = isExpiringSoon(date);
-        // FIX: Pass the parsed Date object to the helper functions instead of the raw string.
         const expired = isExpired(date);
         const color = expired ? 'text-red-500 dark:text-red-400' : expiring ? 'text-yellow-500 dark:text-yellow-400' : '';
-        const icon = expired ? 'TriangleAlert' : expiring ? 'Timer' : null;
+        // FIX: Explicitly typing the icon name variable to match `keyof typeof icons` and prevent type errors.
+        const icon: keyof typeof icons | null = expired ? 'TriangleAlert' : expiring ? 'Timer' : null;
         return (
             <span className={`font-semibold flex items-center gap-1.5 ${color}`}>
-                {icon && <Icon name={icon as any} size={16} />}
-                {date.toLocaleDateString()}
+                {icon && <Icon name={icon} size={16} />}
+                {date.toLocaleDateString('pt-BR')}
             </span>
         )
     }
@@ -610,7 +598,6 @@ const LicenseControl: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         </button>
                     )}
                     <button onClick={() => handleOpenModal()} className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                        {/* FIX: Replaced invalid icon name 'PlusCircle' with 'CirclePlus' to resolve a type error. */}
                         <Icon name="CirclePlus" size={18}/> Nova Licença
                     </button>
                 </div>

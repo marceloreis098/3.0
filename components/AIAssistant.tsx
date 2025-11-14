@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { generateReportWithGemini } from '../services/geminiService';
 import { getEquipment } from '../services/apiService';

@@ -240,8 +240,7 @@ const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
                 alert(`Erro: ${result.message}`);
             }
         } catch (error: any) {
-             // FIX: The alert function expects a string. Safely convert the error to a string before displaying it.
-             alert(`Erro: ${error instanceof Error ? error.message : String(error)}`);
+             alert(`Erro: ${error}`);
         } finally {
             setIsDatabaseActionLoading(false);
         }
