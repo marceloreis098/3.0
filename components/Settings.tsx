@@ -241,7 +241,8 @@ const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
                 alert(`Erro: ${result.message}`);
             }
         } catch (error: any) {
-             alert(`Erro: ${error}`);
+            // FIX: The alert for this error would display "[object Object]". It's now fixed to show the actual error message, consistent with other error handling in the application.
+             alert(`Erro: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setIsDatabaseActionLoading(false);
         }

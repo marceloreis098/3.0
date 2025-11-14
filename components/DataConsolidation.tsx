@@ -120,7 +120,7 @@ const DataConsolidation: React.FC<{ currentUser: User }> = ({ currentUser }) => 
             const baseMappings: { [key: string]: keyof Equipment } = {
                 'EQUIPAMENTO': 'equipamento', 'GARANTIA': 'garantia', 'PATRIMONIO': 'patrimonio', 'SERIAL': 'serial',
                 'USUÁRIO ATUAL': 'usuarioAtual', 'USUÁRIO ANTERIOR': 'usuarioAnterior', 'LOCAL': 'local', 'SETOR': 'setor',
-                'DATA ENTREGA O USUÁRIO': 'dataEntregaUsuario', 'STATUS': 'status', 'DATA DE DEVOLUÇÃO': 'dataDevolucao',
+                'DATA ENTREGA AO USUÁRIO': 'dataEntregaUsuario', 'STATUS': 'status', 'DATA DE DEVOLUÇÃO': 'dataDevolucao',
                 'TIPO': 'tipo', 'NOTA DE COMPRA': 'notaCompra', 'NOTA / PL K&M': 'notaPlKm',
                 'TERMO DE RESPONSABILIDADE': 'termoResponsabilidade', 'FOTO': 'foto', 'QR CODE': 'qrCode',
                 'MARCA': 'brand', 'MODELO': 'model', 'EMAIL COLABORADOR': 'emailColaborador',
@@ -130,8 +130,8 @@ const DataConsolidation: React.FC<{ currentUser: User }> = ({ currentUser }) => 
             };
 
             const absoluteMappings: { [key: string]: keyof Equipment } = {
-                'NOMEDODISPOSITIVO': 'equipamento', 'NÚMERODESÉRIE': 'serial',
-                'NOMEDOUSUÁRIOATUAL': 'usuarioAtual', 'MARCA': 'brand', 'MODELO': 'model',
+                'NOME DO DISPOSITIVO': 'equipamento', 'NÚMERO DE SÉRIE': 'serial',
+                'NOME DO USUÁRIO ATUAL': 'usuarioAtual', 'MARCA': 'brand', 'MODELO': 'model',
                 'EMAIL DO COLABORADOR': 'emailColaborador',
                 // Novos campos - Relatório Absolute
                 'IDENTIFICADOR': 'identificador', 'NOME DO SO': 'nomeSO', 'MEMÓRIA FÍSICA TOTAL': 'memoriaFisicaTotal', 
