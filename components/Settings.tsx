@@ -210,7 +210,8 @@ const Settings: React.FC<SettingsProps> = ({ currentUser }) => {
                 alert(`Erro ao salvar configurações: ${result.message}`);
             }
         } catch (error: any) {
-            alert(`Erro: ${error.message}`);
+            // FIX: This catch block was alerting with the raw error object, which would display as "[object Object]". It now correctly accesses the 'message' property if it's an Error instance, or converts the error to a string for better feedback.
+            alert(`Erro: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setIsSaving(false);
             fetchAllData(); // Re-fetch all data to ensure consistency

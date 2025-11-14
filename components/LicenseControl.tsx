@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { getLicenses, addLicense, updateLicense, deleteLicense, renameProduct, getLicenseTotals, saveLicenseTotals } from '../services/apiService';
 import { License, User, UserRole } from '../types';
@@ -367,7 +368,8 @@ const LicenseControl: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             }
         } catch (error: any) {
             console.error("Failed to save license totals:", error);
-            alert("Falha ao salvar o total de licenças. Tente novamente. Detalhes: " + error.message);
+// FIX: Checked error type before accessing 'message' property to prevent runtime errors with unknown error types.
+            alert("Falha ao salvar o total de licenças. Tente novamente. Detalhes: " + (error instanceof Error ? error.message : String(error)));
         }
     };
 
@@ -431,7 +433,8 @@ const LicenseControl: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     
         } catch (error: any) {
             console.error("Failed to save product name changes:", error);
-            alert(`Erro ao salvar alterações: ${error.message}`);
+            // FIX: Checked error type before accessing 'message' property to prevent runtime errors.
+            alert(`Erro ao salvar alterações: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             // 5. Reload all data from server to ensure consistency
             loadLicensesAndProducts();
